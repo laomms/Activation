@@ -63,21 +63,45 @@ BOOL GetNtVersionNumbers(DWORD& dwMajorVer, DWORD& dwMinorVer, DWORD& dwBuildNum
 	return bRet;
 }
 
+int ActivateKey(std::wstring ProductKeys, Activation::ManagedCallbackHandler^ PrintString)
+{
+
+	PrintString(GetOSLCID() == 1 ? "正在激活..." : "Activating...");
+	char nErrorCode[32];
+	SelectQuery^ NAQuery = gcnew SelectQuery("SELECT Name,ID,Description,OfflineInstallationId,PartialProductKey FROM OfficeSoftwareProtectionProduct WHERE PartialProductKey like '" + gcnew String(ProductKeys.substr(24, 5).c_str()) + "' ");
+	ManagementObjectSearcher^ NASearcher = gcnew ManagementObjectSearcher(NAQuery);
+	try
+	{
+		for each (ManagementObject ^ mObject in NASearcher->Get())
+		{
+			array<System::Object^>^ agrs = nullptr;
+			mObject->InvokeMethod("Activate", agrs);
+			PrintString(GetOSLCID() == 1 ? mObject["Name"]->ToString() + "已永久激活成功!" : mObject["Name"]->ToString() + "Activated successfully!");
+			return 0;
+		}
+	}
+	catch (COMException^ err)
+	{
+		sprintf_s(nErrorCode, "0x%08X", err->ErrorCode);
+		if (((std::string)nErrorCode).find("008") != std::string::npos || ((std::string)nErrorCode).find("020") != std::string::npos || ((std::string)nErrorCode).find("800") != std::string::npos || ((std::string)nErrorCode).find("400") != std::string::npos || ((std::string)nErrorCode).find("C004E028") != std::string::npos || ((std::string)nErrorCode).find("C004FC03") != std::string::npos)
+		{
+						
+				
+		}
+		else
+		{
+			PrintString(GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode));
+			return err->ErrorCode;
+		}		
+	}
+	return 0;
+}
+
 int InstallKey(std::wstring ProductKeys, Activation::ManagedCallbackHandler^ PrintString)
 {
 	char nErrorCode[32];
-	String^ ProductKey = gcnew String(ProductKeys.c_str());
-	//ManagementClass^ mClass = gcnew ManagementClass("SELECT Version FROM OfficeSoftwareProtectionService");
-	//ManagementObjectCollection^ moCollection;
-	//ManagementObject^ mObject = gcnew ManagementObject();
-	//moCollection = mClass->GetInstances();
-	//for each (mObject in moCollection)
-	//{
-	//	array<System::String^>^ agrs = { ProductKey };
-	//	mObject->InvokeMethod("InstallProductKey", agrs);
-	//	//str += mObject["SerialNumber"]->ToString();
-	//}
-	SelectQuery^ NAQuery = gcnew SelectQuery("SELECT Version FROM SoftwareLicensingService");
+	String^ ProductKey = gcnew String(ProductKeys.c_str());	
+	SelectQuery^ NAQuery = gcnew SelectQuery("SELECT Version FROM OfficeSoftwareProtectionService");
 	ManagementObjectSearcher^ NASearcher = gcnew ManagementObjectSearcher(NAQuery);
 	try
 	{
@@ -85,6 +109,8 @@ int InstallKey(std::wstring ProductKeys, Activation::ManagedCallbackHandler^ Pri
 		{
 			array<System::String^>^ agrs = { ProductKey };
 			mObject->InvokeMethod("InstallProductKey", agrs);
+			PrintString(GetOSLCID() == 1 ? "安装成功." : "Successful installation.");
+			ActivateKey(ProductKeys, PrintString);
 		}
 	}
 	catch (COMException^ err)
@@ -94,33 +120,46 @@ int InstallKey(std::wstring ProductKeys, Activation::ManagedCallbackHandler^ Pri
 		return err->ErrorCode;
 	}	
 	return 0;
-
-	/*ManagementClass mc = new  ManagementClass("Win32_Process");
-	ManagementBaseObject obj = mc.GetMethodParameters("Create");
-	obj["CommandLine"] = "notepad.exe";
-	mc.InvokeMethod("Create", obj, NULL);
-	mc.Dispose(); */
 }
 
-int ActivateKey(std::string ProductKeys, char*& SkuId, Activation::ManagedCallbackHandler^ PrintString)
-{
-	return 0;
-}
+
 
 int slpublicfunc::ActivateProductKey(HANDLE hSLC, GUID bSkuId, Activation::ManagedCallbackHandler^ PrintString)
 {
+	PrintString(GetOSLCID() == 1 ? "正在激活..." : "Activating...");
 	char nErrorCode[32];
 	int Status = SLActivateProduct(hSLC, &bSkuId, NULL, NULL, NULL, NULL, NULL);
 	if (Status == ERROR_SUCCESS)
 	{
-		PrintString(GetOSLCID() == 1 ? "激活成功." : "Activation was successful.");
+		System::String^ Name;
+		SLDATATYPE peDataType;
+		UINT pcbValue = 0;
+		System::IntPtr ppbValue;
+		if (SLGetProductSkuInformation(hSLC, &bSkuId, L"Name", &peDataType, &pcbValue,(PBYTE*) &ppbValue) == 0)
+		{
+			Name = Marshal::PtrToStringUni(ppbValue);
+		}
+		PrintString(GetOSLCID() == 1 ? Name + "激活成功." : Name + "Activation was successful.");
 		return 0;
 	}
 	else
 	{
 		sprintf_s(nErrorCode, "0x%08X", Status);
-		PrintString(GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode));
-		return Status;
+		if (((std::string)nErrorCode).find("008") != std::string::npos || ((std::string)nErrorCode).find("020") != std::string::npos || ((std::string)nErrorCode).find("800") != std::string::npos || ((std::string)nErrorCode).find("400") != std::string::npos || ((std::string)nErrorCode).find("C004E028") != std::string::npos || ((std::string)nErrorCode).find("C004FC03") != std::string::npos)
+		{
+			System::String^ IID;
+			System::IntPtr pIID;
+			if (SLGenerateOfflineInstallationId(hSLC, &bSkuId,(PWSTR*)&pIID) == 0)
+			{
+				IID = Marshal::PtrToStringUni(pIID);
+			}
+			return int::Parse(IID);
+		}
+		else
+		{
+			PrintString(GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode));
+			return Status;
+		}
 	}
 }
 

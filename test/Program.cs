@@ -15,7 +15,7 @@ namespace test
         static void Main(string[] args)
         {
             Activation.Class1 c = new Activation.Class1();
-            c.InstallProductKeys("2K932-JWGBH-M83T8-KP2BX-74PKT", MyCallbackFunc);
+            c.InstallProductKeys("PM3NG-YFYG2-P43DG-8KWVX-M98XG", MyCallbackFunc);
             //c.KMS38ACT(MyCallbackFunc);
             Console.ReadLine();
         }
