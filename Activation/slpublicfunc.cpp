@@ -14,8 +14,8 @@
 #include "Activation.h"
 #include "slpublicfunc.h"
 #pragma comment(lib,"Slwga.lib")
-#pragma comment(lib,"Slc.lib")
 #pragma comment(lib,"Rpcrt4.lib")
+#pragma comment(lib,"Slc.lib")
 #pragma comment(lib,"Slcext.lib")
 #pragma warning(disable:4996)
 
@@ -96,6 +96,7 @@ int ActivateKey(std::wstring ProductKeys, Activation::ManagedCallbackHandler^ Pr
 			return err->ErrorCode;
 		}		
 	}
+	PrintString(GetOSLCID() == 1 ? "激活失败." : "Activation failed.");
 	return 0;
 }
 
@@ -121,6 +122,7 @@ int InstallKey(std::wstring ProductKeys, Activation::ManagedCallbackHandler^ Pri
 		PrintString(GetOSLCID() == 1 ? "安装失败,错误代码:"+ gcnew String(nErrorCode) : "Installation failed, error code:" + gcnew String(nErrorCode));
 		return err->ErrorCode;
 	}	
+	PrintString(GetOSLCID() == 1 ? "安装失败." : "Installation failed.");
 	return 0;
 }
 
@@ -163,6 +165,7 @@ int ActivateProductKey(HANDLE hSLC, GUID bSkuId, Activation::ManagedCallbackHand
 			return Status;
 		}
 	}
+	PrintString(GetOSLCID() == 1 ? "激活失败." : "Activation failed.");
 	return 0;
 }
 
@@ -229,6 +232,7 @@ int slpublicfunc::InstallProductKey(std::wstring ProductKey,Activation::ManagedC
 			return Status;
 		}
 	}
+	PrintString(GetOSLCID() == 1 ? "安装失败." : "Installation failed.");
 	return 0;
 }
 
@@ -239,6 +243,8 @@ int slpublicfunc::InstallCID(std::string InstalltionID, std::string Confirmation
 
 	SelectQuery^ NAQuery = gcnew SelectQuery("SELECT Name,ID,Description,PartialProductKey,OfflineInstallationId,ApplicationID FROM SoftwareLicensingProduct WHERE OfflineInstallationId  like  '" + gcnew String(InstalltionID.c_str()) + "'");
 	ManagementObjectSearcher^ NASearcher = gcnew ManagementObjectSearcher(NAQuery);
+	if (NASearcher->Get()->Count == 0)
+		goto next;
 	try
 	{
 		for each (ManagementObject ^ mObject in NASearcher->Get())
@@ -255,6 +261,28 @@ int slpublicfunc::InstallCID(std::string InstalltionID, std::string Confirmation
 		PrintString(GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode));
 		return err->ErrorCode;
 	}
+
+next:
+	NAQuery = gcnew SelectQuery("SELECT Name,ID,Description,PartialProductKey,OfflineInstallationId,ApplicationID FROM OfficeSoftwareProtectionProduct WHERE OfflineInstallationId  like  '" + gcnew String(InstalltionID.c_str()) + "'");
+	NASearcher = gcnew ManagementObjectSearcher(NAQuery);
+	try
+	{
+		for each (ManagementObject ^ mObject in NASearcher->Get())
+		{
+			array<Object^>^ arguments = { gcnew String(InstalltionID.c_str()), gcnew String(ConfirmationID.c_str()) };
+			Object^ errorCode = mObject->InvokeMethod("DepositOfflineConfirmationId", arguments);
+			PrintString(GetOSLCID() == 1 ? mObject["Name"]->ToString() + "已永久激活成功!" : mObject["Name"]->ToString() + "Activated successfully!");
+			return 1;
+		}
+	}
+	catch (COMException^ err)
+	{
+		sprintf_s(nErrorCode, "0x%08X", err->ErrorCode);
+		PrintString(GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode));
+		return err->ErrorCode;
+	}
+
+	PrintString(GetOSLCID() == 1 ? "激活失败."  : "Activation failed.");
 	return 0;
 }
 
