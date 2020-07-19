@@ -36,10 +36,10 @@ int Activation::Class1::InstallProductKeys(String^ ProductKeys, ManagedCallbackH
 
 int Activation::Class1::InstallConfirmaionID(String^ IID, String^ CID, ManagedCallbackHandler^ PrintString)
 {
-	string InstalltionID;
-	MarshalString(IID, InstalltionID);
-	string ConfirmationID;
-	MarshalString(CID, ConfirmationID);
-	return slpublicfunc::InstallCID(InstalltionID, ConfirmationID, PrintString);
+	//string InstalltionID;
+	//MarshalString(IID, InstalltionID);
+	//string ConfirmationID;
+	//MarshalString(CID, ConfirmationID);
+	return slpublicfunc::InstallCID(IID, CID, PrintString);
 }
 

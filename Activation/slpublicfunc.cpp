@@ -236,12 +236,12 @@ int slpublicfunc::InstallProductKey(std::wstring ProductKey,Activation::ManagedC
 	return 0;
 }
 
-int slpublicfunc::InstallCID(std::string InstalltionID, std::string ConfirmationID, Activation::ManagedCallbackHandler^ PrintString)
+int slpublicfunc::InstallCID(String^ InstalltionID, String^ ConfirmationID, Activation::ManagedCallbackHandler^ PrintString)
 {
 	PrintString(GetOSLCID() == 1 ? "正在激活..." : "Activating...");
 	char nErrorCode[32];
 
-	SelectQuery^ NAQuery = gcnew SelectQuery("SELECT Name,ID,Description,PartialProductKey,OfflineInstallationId,ApplicationID FROM SoftwareLicensingProduct WHERE OfflineInstallationId  like  '" + gcnew String(InstalltionID.c_str()) + "'");
+	SelectQuery^ NAQuery = gcnew SelectQuery("SELECT Name,ID,Description,PartialProductKey,OfflineInstallationId,ApplicationID FROM SoftwareLicensingProduct WHERE OfflineInstallationId  like  '" + InstalltionID + "'");
 	ManagementObjectSearcher^ NASearcher = gcnew ManagementObjectSearcher(NAQuery);
 	if (NASearcher->Get()->Count == 0)
 		goto next;
@@ -249,7 +249,7 @@ int slpublicfunc::InstallCID(std::string InstalltionID, std::string Confirmation
 	{
 		for each (ManagementObject ^ mObject in NASearcher->Get())
 		{
-			array<Object^>^ arguments = { gcnew String(InstalltionID.c_str()), gcnew String(ConfirmationID.c_str()) };
+			array<Object^>^ arguments = { InstalltionID, ConfirmationID };
 			Object^ errorCode = mObject->InvokeMethod("DepositOfflineConfirmationId", arguments);
 			PrintString(GetOSLCID() == 1 ? mObject["Name"]->ToString() + "已永久激活成功!" : mObject["Name"]->ToString() + "Activated successfully!");
 			return 1;
@@ -263,13 +263,13 @@ int slpublicfunc::InstallCID(std::string InstalltionID, std::string Confirmation
 	}
 
 next:
-	NAQuery = gcnew SelectQuery("SELECT Name,ID,Description,PartialProductKey,OfflineInstallationId,ApplicationID FROM OfficeSoftwareProtectionProduct WHERE OfflineInstallationId  like  '" + gcnew String(InstalltionID.c_str()) + "'");
+	NAQuery = gcnew SelectQuery("SELECT Name,ID,Description,PartialProductKey,OfflineInstallationId,ApplicationID FROM OfficeSoftwareProtectionProduct WHERE OfflineInstallationId  like  '" + InstalltionID + "'");
 	NASearcher = gcnew ManagementObjectSearcher(NAQuery);
 	try
 	{
 		for each (ManagementObject ^ mObject in NASearcher->Get())
 		{
-			array<Object^>^ arguments = { gcnew String(InstalltionID.c_str()), gcnew String(ConfirmationID.c_str()) };
+			array<Object^>^ arguments = { InstalltionID,ConfirmationID };
 			Object^ errorCode = mObject->InvokeMethod("DepositOfflineConfirmationId", arguments);
 			PrintString(GetOSLCID() == 1 ? mObject["Name"]->ToString() + "已永久激活成功!" : mObject["Name"]->ToString() + "Activated successfully!");
 			return 1;
