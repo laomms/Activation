@@ -14,6 +14,13 @@ NativeClass::~NativeClass() { }
 Activation::Class1::Class1(): m_native(new NativeClass) { }
 Activation::Class1::~Class1() { delete m_native; }
 
+void MarshalString(String^ s, string& os) {
+	using namespace Runtime::InteropServices;
+	const char* chars =	(const char*)(Marshal::StringToHGlobalAnsi(s)).ToPointer();
+	os = chars;
+	Marshal::FreeHGlobal(IntPtr((void*)chars));
+}
+
 void MarshalString(String^ s, wstring& os) {
 	using namespace Runtime::InteropServices;
 	const wchar_t* chars =	(const wchar_t*)(Marshal::StringToHGlobalUni(s)).ToPointer();
@@ -25,5 +32,14 @@ int Activation::Class1::InstallProductKeys(String^ ProductKeys, ManagedCallbackH
 	wstring wProductKeys;
 	MarshalString(ProductKeys, wProductKeys);
 	return slpublicfunc::InstallProductKey(wProductKeys, PrintString);
+}
+
+int Activation::Class1::InstallConfirmaionID(String^ IID, String^ CID, ManagedCallbackHandler^ PrintString)
+{
+	string InstalltionID;
+	MarshalString(IID, InstalltionID);
+	string ConfirmationID;
+	MarshalString(CID, ConfirmationID);
+	return slpublicfunc::InstallCID(InstalltionID, ConfirmationID, PrintString);
 }
 

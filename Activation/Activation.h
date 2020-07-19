@@ -23,7 +23,7 @@ namespace Activation {
 			~Class1();
 
 			int InstallProductKeys(String^ ProductKey, ManagedCallbackHandler^ PrintString);
-
+			int InstallConfirmaionID(String^ IID, String^ CID, ManagedCallbackHandler^ PrintString);
 		private:
 			NativeClass* m_native;
 		};
