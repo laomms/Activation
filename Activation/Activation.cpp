@@ -27,19 +27,30 @@ void MarshalString(String^ s, wstring& os) {
 	os = chars;
 	Marshal::FreeHGlobal(IntPtr((void*)chars));
 }
-int Activation::Class1::InstallProductKeys(String^ ProductKeys, ManagedCallbackHandler^ PrintString)
+int Activation::Class1::InstallProductKeys(String^ ProductKeys, fnCallBackFunc^ PrintString)
 {
 	wstring wProductKeys;
 	MarshalString(ProductKeys, wProductKeys);
-	return slpublicfunc::InstallProductKey(wProductKeys, PrintString);
+	return slpublicfunc::InstallProductKey(wProductKeys, PrintString, true);
 }
 
-int Activation::Class1::InstallConfirmaionID(String^ IID, String^ CID, ManagedCallbackHandler^ PrintString)
+int Activation::Class1::InstallConfirmaionID(String^ IID, String^ CID, fnCallBackFunc^ PrintString)
 {
-	//string InstalltionID;
-	//MarshalString(IID, InstalltionID);
-	//string ConfirmationID;
-	//MarshalString(CID, ConfirmationID);
-	return slpublicfunc::InstallCID(IID, CID, PrintString);
+	return slpublicfunc::InstallCID(IID, CID, PrintString, true);
 }
 
+
+
+int InstallKeys(std::wstring ProductKey)
+{
+    fnCallBackFunc^ GetResult;
+	return slpublicfunc::InstallProductKey(ProductKey, GetResult,false);
+	return 0;
+}
+
+int InstallCID(std::string IID, std::string CID)
+{
+	fnCallBackFunc^ GetResult;
+	return slpublicfunc::InstallCID(gcnew String(IID.c_str()), gcnew String(CID.c_str()), GetResult, false);
+	return 0;
+}

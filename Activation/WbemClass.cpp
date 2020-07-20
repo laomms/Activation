@@ -16,7 +16,7 @@ using namespace System;
 using namespace System::Management;
 
 
-int WbemClass::install_productkey(std::string ProductKeys,Activation::ManagedCallbackHandler^ PrintString)
+int WbemClass::install_productkey(std::string ProductKeys,Activation::fnCallBackFunc^ PrintString)
 {
 	IWbemServices* pServices = NULL;
 	IWbemLocator* pLoc = 0;
@@ -97,7 +97,7 @@ cleanup:
 	return hr;
 }
 
-int WbemClass::activate_productkey(std::string ProductKeys, char*& SkuId, Activation::ManagedCallbackHandler^ PrintString)
+int WbemClass::activate_productkey(std::string ProductKeys, char*& SkuId, Activation::fnCallBackFunc^ PrintString)
 {
 	//char* SkuId = (char*)calloc(100, sizeof(char*));
 	//初始化

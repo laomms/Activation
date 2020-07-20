@@ -11,8 +11,8 @@
 #include <slerror.h>
 #include <slpublic.h>
 #include <rpcdce.h>
-#include "Activation.h"
 #include "slpublicfunc.h"
+#include <msclr/marshal_cppstd.h>
 #pragma comment(lib,"Slwga.lib")
 #pragma comment(lib,"Rpcrt4.lib")
 #pragma comment(lib,"Slc.lib")
@@ -22,6 +22,15 @@
 using namespace System;
 using namespace System::Management;
 using namespace System::Runtime::InteropServices;
+
+#include "Activation.h"
+
+
+CallbackFun myCallback = NULL;
+void SetCallBackFun(CallbackFun callbackfun)
+{
+	myCallback = callbackfun;
+}
 
 int GetOSLCID()
 {
@@ -63,7 +72,7 @@ BOOL GetNtVersionNumbers(DWORD& dwMajorVer, DWORD& dwMinorVer, DWORD& dwBuildNum
 	return bRet;
 }
 
-int ActivateKey(std::wstring ProductKeys, Activation::ManagedCallbackHandler^ PrintString)
+int ActivateKey(std::wstring ProductKeys, Activation::fnCallBackFunc^ PrintString,bool managed)
 {
 	PrintString(GetOSLCID() == 1 ? "正在激活..." : "Activating...");
 	System::String^ IID;
@@ -100,7 +109,7 @@ int ActivateKey(std::wstring ProductKeys, Activation::ManagedCallbackHandler^ Pr
 	return 0;
 }
 
-int InstallKey(std::wstring ProductKeys, Activation::ManagedCallbackHandler^ PrintString)
+int InstallKey(std::wstring ProductKeys, Activation::fnCallBackFunc^ PrintString, bool managed)
 {
 	char nErrorCode[32];
 	String^ ProductKey = gcnew String(ProductKeys.c_str());	
@@ -113,7 +122,7 @@ int InstallKey(std::wstring ProductKeys, Activation::ManagedCallbackHandler^ Pri
 			array<System::String^>^ agrs = { ProductKey };
 			mObject->InvokeMethod("InstallProductKey", agrs);
 			PrintString(GetOSLCID() == 1 ? "安装成功." : "Successful installation.");
-			ActivateKey(ProductKeys, PrintString);
+			ActivateKey(ProductKeys, PrintString, managed);
 		}
 	}
 	catch (COMException^ err)
@@ -126,7 +135,7 @@ int InstallKey(std::wstring ProductKeys, Activation::ManagedCallbackHandler^ Pri
 	return 0;
 }
 
-int ActivateProductKey(HANDLE hSLC, GUID bSkuId, Activation::ManagedCallbackHandler^ PrintString)
+int ActivateProductKey(HANDLE hSLC, GUID bSkuId, Activation::fnCallBackFunc^ PrintString, bool managed)
 {
 	PrintString(GetOSLCID() == 1 ? "正在激活..." : "Activating...");
 	char nErrorCode[32];
@@ -169,7 +178,7 @@ int ActivateProductKey(HANDLE hSLC, GUID bSkuId, Activation::ManagedCallbackHand
 	return 0;
 }
 
-int slpublicfunc::InstallProductKey(std::wstring ProductKey,Activation::ManagedCallbackHandler^ PrintString)
+int slpublicfunc::InstallProductKey(std::wstring ProductKey,Activation::fnCallBackFunc^ PrintString,bool managed)
 {
 	char nErrorCode[32];
 	GUID PKeyId = GUID_NULL;
@@ -204,7 +213,7 @@ int slpublicfunc::InstallProductKey(std::wstring ProductKey,Activation::ManagedC
 				bSkuId = GUID_NULL; //{84832881-46EF-4124-8ABC-EB493CDCF78E}
 				memcpy(&bSkuId, ppbValue, 16);
 				PrintString(GetOSLCID() == 1 ? "安装成功." : "Successful installation.");
-				return ActivateProductKey(hSLC, bSkuId, PrintString);
+				return ActivateProductKey(hSLC, bSkuId, PrintString, managed);
 			}
 			else
 			{
@@ -217,11 +226,11 @@ int slpublicfunc::InstallProductKey(std::wstring ProductKey,Activation::ManagedC
 		}
 		else if (Status == -1073422312)//C004E018
 		{
-			InstallKey(ProductKey, PrintString);
+			InstallKey(ProductKey, PrintString, managed);
 		}
 		else if (Status == -1073418160)//0xc004f050
 		{
-			InstallKey(ProductKey, PrintString);
+			InstallKey(ProductKey, PrintString,managed);
 		}
 		else
 		{
@@ -236,11 +245,15 @@ int slpublicfunc::InstallProductKey(std::wstring ProductKey,Activation::ManagedC
 	return 0;
 }
 
-int slpublicfunc::InstallCID(String^ InstalltionID, String^ ConfirmationID, Activation::ManagedCallbackHandler^ PrintString)
+int slpublicfunc::InstallCID(String^ InstalltionID, String^ ConfirmationID, Activation::fnCallBackFunc^ PrintString,bool managed)
 {
-	PrintString(GetOSLCID() == 1 ? "正在激活..." : "Activating...");
-	char nErrorCode[32];
+	String^ s = GetOSLCID() == 1 ? "正在激活..." : "Activating...";
+	if (!managed)
+		myCallback(msclr::interop::marshal_as<std::string>(s));
+	else
+	    PrintString(s);
 
+	char nErrorCode[32];
 	SelectQuery^ NAQuery = gcnew SelectQuery("SELECT Name,ID,Description,PartialProductKey,OfflineInstallationId,ApplicationID FROM SoftwareLicensingProduct WHERE OfflineInstallationId  like  '" + InstalltionID + "'");
 	ManagementObjectSearcher^ NASearcher = gcnew ManagementObjectSearcher(NAQuery);
 	if (NASearcher->Get()->Count == 0)
