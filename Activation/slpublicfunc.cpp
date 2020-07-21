@@ -74,7 +74,12 @@ BOOL GetNtVersionNumbers(DWORD& dwMajorVer, DWORD& dwMinorVer, DWORD& dwBuildNum
 
 int ActivateKey(std::wstring ProductKeys, Activation::fnCallBackFunc^ PrintString,bool managed)
 {
-	PrintString(GetOSLCID() == 1 ? "正在激活..." : "Activating...");
+	String^ s = GetOSLCID() == 1 ? "正在激活..." : "Activating...";
+	if (!managed)
+		myCallback(msclr::interop::marshal_as<std::string>(s));
+	else
+		PrintString(s);
+
 	System::String^ IID;
 	char nErrorCode[32];
 	SelectQuery^ NAQuery = gcnew SelectQuery("SELECT Name,ID,Description,OfflineInstallationId,PartialProductKey FROM OfficeSoftwareProtectionProduct WHERE PartialProductKey like '" + gcnew String(ProductKeys.substr(24, 5).c_str()) + "' ");
@@ -86,7 +91,11 @@ int ActivateKey(std::wstring ProductKeys, Activation::fnCallBackFunc^ PrintStrin
 			IID = mObject["OfflineInstallationId"]->ToString();
 			array<System::Object^>^ agrs = nullptr;
 			mObject->InvokeMethod("Activate", agrs);
-			PrintString(GetOSLCID() == 1 ? mObject["Name"]->ToString() + "已永久激活成功!" : mObject["Name"]->ToString() + "Activated successfully!");
+			s = GetOSLCID() == 1 ? mObject["Name"]->ToString() + "已永久激活成功!" : mObject["Name"]->ToString() + "Activated successfully!";
+			if (!managed)
+				myCallback(msclr::interop::marshal_as<std::string>(s));
+			else
+				PrintString(s);
 			return 1;
 		}
 	}
@@ -95,22 +104,39 @@ int ActivateKey(std::wstring ProductKeys, Activation::fnCallBackFunc^ PrintStrin
 		sprintf_s(nErrorCode, "0x%08X", err->ErrorCode);
 		if (((std::string)nErrorCode).find("008") != std::string::npos || ((std::string)nErrorCode).find("020") != std::string::npos || ((std::string)nErrorCode).find("800") != std::string::npos || ((std::string)nErrorCode).find("400") != std::string::npos || ((std::string)nErrorCode).find("C004E028") != std::string::npos || ((std::string)nErrorCode).find("C004FC03") != std::string::npos)
 		{
-			PrintString(GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode));
-			PrintString(GetOSLCID() == 1 ? "安装ID:" + IID : "InstalltionID:" + IID);
+			s = GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode);
+			if (!managed)
+				myCallback(msclr::interop::marshal_as<std::string>(s));
+			else
+				PrintString(s);
+			s = GetOSLCID() == 1 ? "安装ID:" + IID : "InstalltionID:" + IID;
+			if (!managed)
+				myCallback(msclr::interop::marshal_as<std::string>(s));
+			else
+				PrintString(s);
 			return 2;
 		}
 		else
 		{
-			PrintString(GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode));
+			s = GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode);
+			if (!managed)
+				myCallback(msclr::interop::marshal_as<std::string>(s));
+			else
+				PrintString(s);
 			return err->ErrorCode;
 		}		
 	}
-	PrintString(GetOSLCID() == 1 ? "激活失败." : "Activation failed.");
+	s = GetOSLCID() == 1 ? "激活失败." : "Activation failed.";
+	if (!managed)
+		myCallback(msclr::interop::marshal_as<std::string>(s));
+	else
+		PrintString(s);
 	return 0;
 }
 
 int InstallKey(std::wstring ProductKeys, Activation::fnCallBackFunc^ PrintString, bool managed)
 {
+
 	char nErrorCode[32];
 	String^ ProductKey = gcnew String(ProductKeys.c_str());	
 	SelectQuery^ NAQuery = gcnew SelectQuery("SELECT Version FROM OfficeSoftwareProtectionService");
@@ -121,23 +147,39 @@ int InstallKey(std::wstring ProductKeys, Activation::fnCallBackFunc^ PrintString
 		{
 			array<System::String^>^ agrs = { ProductKey };
 			mObject->InvokeMethod("InstallProductKey", agrs);
-			PrintString(GetOSLCID() == 1 ? "安装成功." : "Successful installation.");
+			String^ s = GetOSLCID() == 1 ? "安装成功." : "Successful installation.";
+			if (!managed)
+				myCallback(msclr::interop::marshal_as<std::string>(s));
+			else
+				PrintString(s);
 			ActivateKey(ProductKeys, PrintString, managed);
 		}
 	}
 	catch (COMException^ err)
 	{
 		sprintf_s(nErrorCode, "0x%08X", err->ErrorCode);
-		PrintString(GetOSLCID() == 1 ? "安装失败,错误代码:"+ gcnew String(nErrorCode) : "Installation failed, error code:" + gcnew String(nErrorCode));
+		String^ s = GetOSLCID() == 1 ? "安装失败,错误代码:"+ gcnew String(nErrorCode) : "Installation failed, error code:" + gcnew String(nErrorCode);
+		if (!managed)
+			myCallback(msclr::interop::marshal_as<std::string>(s));
+		else
+			PrintString(s);
 		return err->ErrorCode;
 	}	
-	PrintString(GetOSLCID() == 1 ? "安装失败." : "Installation failed.");
+	String^ s = GetOSLCID() == 1 ? "安装失败." : "Installation failed.";
+	if (!managed)
+		myCallback(msclr::interop::marshal_as<std::string>(s));
+	else
+		PrintString(s);
 	return 0;
 }
 
 int ActivateProductKey(HANDLE hSLC, GUID bSkuId, Activation::fnCallBackFunc^ PrintString, bool managed)
 {
-	PrintString(GetOSLCID() == 1 ? "正在激活..." : "Activating...");
+	String^ s = GetOSLCID() == 1 ? "正在激活..." : "Activating...";
+	if (!managed)
+		myCallback(msclr::interop::marshal_as<std::string>(s));
+	else
+		PrintString(s);
 	char nErrorCode[32];
 	int Status = SLActivateProduct(hSLC, &bSkuId, NULL, NULL, NULL, NULL, NULL);
 	if (Status == ERROR_SUCCESS)
@@ -150,7 +192,11 @@ int ActivateProductKey(HANDLE hSLC, GUID bSkuId, Activation::fnCallBackFunc^ Pri
 		{
 			Name = Marshal::PtrToStringUni(ppbValue);
 		}
-		PrintString(GetOSLCID() == 1 ? Name + "激活成功." : Name + "Activation was successful.");
+		s = GetOSLCID() == 1 ? Name + "激活成功." : Name + "Activation was successful.";
+		if (!managed)
+			myCallback(msclr::interop::marshal_as<std::string>(s));
+		else
+			PrintString(s);
 		return 1;
 	}
 	else
@@ -164,17 +210,33 @@ int ActivateProductKey(HANDLE hSLC, GUID bSkuId, Activation::fnCallBackFunc^ Pri
 			{
 				IID = Marshal::PtrToStringUni(pIID);
 			}
-			PrintString(GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode));
-			PrintString(GetOSLCID() == 1 ? "安装ID:" + IID : "InstalltionID:" + IID);
+			s = GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode);
+			if (!managed)
+				myCallback(msclr::interop::marshal_as<std::string>(s));
+			else
+				PrintString(s);
+			s = GetOSLCID() == 1 ? "安装ID:" + IID : "InstalltionID:" + IID;
+			if (!managed)
+				myCallback(msclr::interop::marshal_as<std::string>(s));
+			else
+				PrintString(s);
 			return 2;
 		}
 		else
 		{
-			PrintString(GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode));
+			s = GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode);
+			if (!managed)
+				myCallback(msclr::interop::marshal_as<std::string>(s));
+			else
+				PrintString(s);
 			return Status;
 		}
 	}
-	PrintString(GetOSLCID() == 1 ? "激活失败." : "Activation failed.");
+	s = GetOSLCID() == 1 ? "激活失败." : "Activation failed.";
+	if (!managed)
+		myCallback(msclr::interop::marshal_as<std::string>(s));
+	else
+		PrintString(s);
 	return 0;
 }
 
@@ -186,7 +248,11 @@ int slpublicfunc::InstallProductKey(std::wstring ProductKey,Activation::fnCallBa
 	HANDLE hSLC = NULL;
 	std::wstring pwszPKeyAlgorithm;
 
-	PrintString(GetOSLCID() == 1 ? "安装密钥..." : "Install ProductKey...");
+	String^ s = GetOSLCID() == 1 ? "安装密钥..." : "Install ProductKey...";
+	if (!managed)
+		myCallback(msclr::interop::marshal_as<std::string>(s));
+	else
+		PrintString(s);
 
 	DWORD dwMajorVer, dwMinorVer, dwBuildNumber;
 	GetNtVersionNumbers(dwMajorVer, dwMinorVer, dwBuildNumber);
@@ -212,15 +278,29 @@ int slpublicfunc::InstallProductKey(std::wstring ProductKey,Activation::fnCallBa
 			{
 				bSkuId = GUID_NULL; //{84832881-46EF-4124-8ABC-EB493CDCF78E}
 				memcpy(&bSkuId, ppbValue, 16);
-				PrintString(GetOSLCID() == 1 ? "安装成功." : "Successful installation.");
+				s = GetOSLCID() == 1 ? "安装成功." : "Successful installation.";
+				if (!managed)
+					myCallback(msclr::interop::marshal_as<std::string>(s));
+				else
+					PrintString(s);
 				return ActivateProductKey(hSLC, bSkuId, PrintString, managed);
 			}
 			else
 			{
 				sprintf_s(nErrorCode, "0x%08X", Status);
-				PrintString(GetOSLCID() == 1 ? "安装失败,错误代码:" + gcnew String(nErrorCode) : "Installation failed, error code:" + gcnew String(nErrorCode));
+				s = GetOSLCID() == 1 ? "安装失败,错误代码:" + gcnew String(nErrorCode) : "Installation failed, error code:" + gcnew String(nErrorCode);
+				if (!managed)
+					myCallback(msclr::interop::marshal_as<std::string>(s));
+				else
+					PrintString(s);
 				if ((std::string)nErrorCode == "C004D302")
-					PrintString(GetOSLCID() == 1 ? "请重启系统." : "Please restart the system.");
+				{
+					s = GetOSLCID() == 1 ? "请重启系统." : "Please restart the system.";
+					if (!managed)
+						myCallback(msclr::interop::marshal_as<std::string>(s));
+					else
+						PrintString(s);
+				}					
 				return Status;
 			}
 		}
@@ -235,13 +315,29 @@ int slpublicfunc::InstallProductKey(std::wstring ProductKey,Activation::fnCallBa
 		else
 		{
 			sprintf_s(nErrorCode, "0x%08X", Status);
-			PrintString(GetOSLCID() == 1 ? "安装失败,错误代码:" + gcnew String(nErrorCode) : "Installation failed, error code:" + gcnew String(nErrorCode));
+			s = GetOSLCID() == 1 ? "安装失败,错误代码:" + gcnew String(nErrorCode) : "Installation failed, error code:" + gcnew String(nErrorCode);
+			if (!managed)
+				myCallback(msclr::interop::marshal_as<std::string>(s));
+			else
+				PrintString(s);
+
 			if ((std::string)nErrorCode == "C004D302")
-				PrintString(GetOSLCID() == 1 ? "请重启系统." : "Please restart the system.");
+			{
+				s = GetOSLCID() == 1 ? "请重启系统." : "Please restart the system.";
+				if (!managed)
+					myCallback(msclr::interop::marshal_as<std::string>(s));
+				else
+					PrintString(s);
+			}			
+
 			return Status;
 		}
 	}
-	PrintString(GetOSLCID() == 1 ? "安装失败." : "Installation failed.");
+	s = GetOSLCID() == 1 ? "安装失败." : "Installation failed.";
+	if (!managed)
+		myCallback(msclr::interop::marshal_as<std::string>(s));
+	else
+		PrintString(s);
 	return 0;
 }
 
@@ -251,7 +347,7 @@ int slpublicfunc::InstallCID(String^ InstalltionID, String^ ConfirmationID, Acti
 	if (!managed)
 		myCallback(msclr::interop::marshal_as<std::string>(s));
 	else
-	    PrintString(s);
+		PrintString(s);
 
 	char nErrorCode[32];
 	SelectQuery^ NAQuery = gcnew SelectQuery("SELECT Name,ID,Description,PartialProductKey,OfflineInstallationId,ApplicationID FROM SoftwareLicensingProduct WHERE OfflineInstallationId  like  '" + InstalltionID + "'");
@@ -264,14 +360,22 @@ int slpublicfunc::InstallCID(String^ InstalltionID, String^ ConfirmationID, Acti
 		{
 			array<Object^>^ arguments = { InstalltionID, ConfirmationID };
 			Object^ errorCode = mObject->InvokeMethod("DepositOfflineConfirmationId", arguments);
-			PrintString(GetOSLCID() == 1 ? mObject["Name"]->ToString() + "已永久激活成功!" : mObject["Name"]->ToString() + "Activated successfully!");
+			s = GetOSLCID() == 1 ? mObject["Name"]->ToString() + "已永久激活成功!" : mObject["Name"]->ToString() + "Activated successfully!";
+			if (!managed)
+				myCallback(msclr::interop::marshal_as<std::string>(s));
+			else
+				PrintString(s);
 			return 1;
 		}
 	}
 	catch (COMException^ err)
 	{
 		sprintf_s(nErrorCode, "0x%08X", err->ErrorCode);
-		PrintString(GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode));
+		s = GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode);
+		if (!managed)
+			myCallback(msclr::interop::marshal_as<std::string>(s));
+		else
+			PrintString(s);
 		return err->ErrorCode;
 	}
 
@@ -284,18 +388,30 @@ next:
 		{
 			array<Object^>^ arguments = { InstalltionID,ConfirmationID };
 			Object^ errorCode = mObject->InvokeMethod("DepositOfflineConfirmationId", arguments);
-			PrintString(GetOSLCID() == 1 ? mObject["Name"]->ToString() + "已永久激活成功!" : mObject["Name"]->ToString() + "Activated successfully!");
+			s = GetOSLCID() == 1 ? mObject["Name"]->ToString() + "已永久激活成功!" : mObject["Name"]->ToString() + "Activated successfully!";
+			if (!managed)
+				myCallback(msclr::interop::marshal_as<std::string>(s));
+			else
+				PrintString(s);
 			return 1;
 		}
 	}
 	catch (COMException^ err)
 	{
 		sprintf_s(nErrorCode, "0x%08X", err->ErrorCode);
-		PrintString(GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode));
+		s = GetOSLCID() == 1 ? "激活失败,错误代码:" + gcnew String(nErrorCode) : "Activation failed, error code:" + gcnew String(nErrorCode);
+		if (!managed)
+			myCallback(msclr::interop::marshal_as<std::string>(s));
+		else
+			PrintString(s);
 		return err->ErrorCode;
 	}
 
-	PrintString(GetOSLCID() == 1 ? "激活失败."  : "Activation failed.");
+	s = GetOSLCID() == 1 ? "激活失败."  : "Activation failed.";
+	if (!managed)
+		myCallback(msclr::interop::marshal_as<std::string>(s));
+	else
+		PrintString(s);
 	return 0;
 }
 

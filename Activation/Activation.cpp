@@ -45,12 +45,10 @@ int InstallKeys(std::wstring ProductKey)
 {
     fnCallBackFunc^ GetResult;
 	return slpublicfunc::InstallProductKey(ProductKey, GetResult,false);
-	return 0;
 }
 
 int InstallCID(std::string IID, std::string CID)
 {
 	fnCallBackFunc^ GetResult;
 	return slpublicfunc::InstallCID(gcnew String(IID.c_str()), gcnew String(CID.c_str()), GetResult, false);
-	return 0;
 }
