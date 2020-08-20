@@ -3,8 +3,7 @@
 #include <slpublic.h>
 #include <unordered_map>
 #using <System.dll>
-//#include "slpublicfunc.h"
-//#include "WbemClass.h"
+
 using namespace System;
 
 

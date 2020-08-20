@@ -22,8 +22,8 @@ int main()
     InstallKeys myInstallKeys = (InstallKeys)GetProcAddress(p, "InstallKeys");
     InstallCID myInstallCID = (InstallCID)GetProcAddress(p, "InstallCID");
     setcallbackfun(myfunction);
-    myInstallKeys(L"NKVRC-VXBJ3-2TYXF-F664C-W2QK7");
-    myInstallCID("314497567220222866203080586423868252240020455203121856826787522", "158705200772684133642932006550607893402065354890");
+    myInstallKeys(L"NKVRC-VXBJ3-2TYXF-F664C-W2QK7");//install ProductKey
+    //myInstallCID("314497567220222866203080586423868252240020455203121856826787522", "158705200772684133642932006550607893402065354890"); //Offline activate
     system("pause");
     return 0;
 }

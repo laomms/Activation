@@ -2,11 +2,14 @@
 #include <Windows.h>
 #include "Activation.h"
 #include "slpublicfunc.h"
-
+#include <msclr\marshal.h>
+#include <msclr\marshal_cppstd.h>
 
 using namespace Activation;
 using namespace System;
 using namespace std;
+using namespace msclr::interop;
+using namespace System::Runtime::InteropServices;
 
 NativeClass::NativeClass() { }
 NativeClass::~NativeClass() { }
@@ -27,28 +30,32 @@ void MarshalString(String^ s, wstring& os) {
 	os = chars;
 	Marshal::FreeHGlobal(IntPtr((void*)chars));
 }
+
+#pragma region Managed
 int Activation::Class1::InstallProductKeys(String^ ProductKeys, fnCallBackFunc^ PrintString)
-{
+{	
 	wstring wProductKeys;
 	MarshalString(ProductKeys, wProductKeys);
 	return slpublicfunc::InstallProductKey(wProductKeys, PrintString, true);
 }
-
 int Activation::Class1::InstallConfirmaionID(String^ IID, String^ CID, fnCallBackFunc^ PrintString)
 {
 	return slpublicfunc::InstallCID(IID, CID, PrintString, true);
 }
+#pragma endregion Managed
 
 
 
+#pragma region UnManaged
 int InstallKeys(std::wstring ProductKey)
 {
+	wstring wProductKeys;
     fnCallBackFunc^ GetResult;
-	return slpublicfunc::InstallProductKey(ProductKey, GetResult,false);
+	return slpublicfunc::InstallProductKey(ProductKey, GetResult, false);
 }
-
 int InstallCID(std::string IID, std::string CID)
 {
 	fnCallBackFunc^ GetResult;
 	return slpublicfunc::InstallCID(gcnew String(IID.c_str()), gcnew String(CID.c_str()), GetResult, false);
 }
+#pragma endregion UnManaged

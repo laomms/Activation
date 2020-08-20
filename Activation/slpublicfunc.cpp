@@ -11,7 +11,6 @@
 #include <slerror.h>
 #include <slpublic.h>
 #include <rpcdce.h>
-#include "slpublicfunc.h"
 #include <msclr/marshal_cppstd.h>
 #pragma comment(lib,"Slwga.lib")
 #pragma comment(lib,"Rpcrt4.lib")
@@ -23,6 +22,7 @@ using namespace System;
 using namespace System::Management;
 using namespace System::Runtime::InteropServices;
 
+#include "slpublicfunc.h"
 #include "Activation.h"
 
 
@@ -72,7 +72,7 @@ BOOL GetNtVersionNumbers(DWORD& dwMajorVer, DWORD& dwMinorVer, DWORD& dwBuildNum
 	return bRet;
 }
 
-int ActivateKey(std::wstring ProductKeys, Activation::fnCallBackFunc^ PrintString,bool managed)
+int ActivateOfficeKey(std::wstring ProductKeys, Activation::fnCallBackFunc^ PrintString,bool managed)
 {
 	String^ s = GetOSLCID() == 1 ? "正在激活..." : "Activating...";
 	if (!managed)
@@ -134,7 +134,7 @@ int ActivateKey(std::wstring ProductKeys, Activation::fnCallBackFunc^ PrintStrin
 	return 0;
 }
 
-int InstallKey(std::wstring ProductKeys, Activation::fnCallBackFunc^ PrintString, bool managed)
+int InstallOfficeKey(std::wstring ProductKeys, Activation::fnCallBackFunc^ PrintString, bool managed)
 {
 
 	char nErrorCode[32];
@@ -152,7 +152,7 @@ int InstallKey(std::wstring ProductKeys, Activation::fnCallBackFunc^ PrintString
 				myCallback(msclr::interop::marshal_as<std::string>(s));
 			else
 				PrintString(s);
-			ActivateKey(ProductKeys, PrintString, managed);
+			ActivateOfficeKey(ProductKeys, PrintString, managed);
 		}
 	}
 	catch (COMException^ err)
@@ -240,7 +240,7 @@ int ActivateProductKey(HANDLE hSLC, GUID bSkuId, Activation::fnCallBackFunc^ Pri
 	return 0;
 }
 
-int slpublicfunc::InstallProductKey(std::wstring ProductKey,Activation::fnCallBackFunc^ PrintString,bool managed)
+int slpublicfunc::InstallProductKey(std::wstring ProductKey,Activation::fnCallBackFunc^ PrintString, bool managed)
 {
 	char nErrorCode[32];
 	GUID PKeyId = GUID_NULL;
@@ -253,6 +253,7 @@ int slpublicfunc::InstallProductKey(std::wstring ProductKey,Activation::fnCallBa
 		myCallback(msclr::interop::marshal_as<std::string>(s));
 	else
 		PrintString(s);
+
 
 	DWORD dwMajorVer, dwMinorVer, dwBuildNumber;
 	GetNtVersionNumbers(dwMajorVer, dwMinorVer, dwBuildNumber);
@@ -306,11 +307,11 @@ int slpublicfunc::InstallProductKey(std::wstring ProductKey,Activation::fnCallBa
 		}
 		else if (Status == -1073422312)//C004E018
 		{
-			InstallKey(ProductKey, PrintString, managed);
+			InstallOfficeKey(ProductKey, PrintString, managed);
 		}
 		else if (Status == -1073418160)//0xc004f050
 		{
-			InstallKey(ProductKey, PrintString,managed);
+			InstallOfficeKey(ProductKey, PrintString,managed);
 		}
 		else
 		{
