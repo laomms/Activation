@@ -1,6 +1,6 @@
 # Activation control
 
-CLR激活控件,有C#和C++调用实例.  
+CLR激活控件双语版,有C#和C++调用实例.  
 由于没有用OSppc控件,所以Office的激活过程使用WMI对象实现.证书很多时理论上比调用API要慢.   
 
 C++调用
