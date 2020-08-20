@@ -1,8 +1,10 @@
 # Activation control
 
-CLR激活控件双语版,有C#和C++调用实例.  
+CLR激活控件双语版,顺带一个纯C++版调用IWbem服务安装激活的类.   
 由于没有用OSppc控件,所以Office的激活过程使用WMI对象实现.证书很多时理论上比调用API要慢.   
 
+
+# 调用实例
 C++调用
  ```C
 #include <iostream>
